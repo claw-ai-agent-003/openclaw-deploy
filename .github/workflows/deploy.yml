@@ -55,15 +55,11 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            # Clone or update the repository
             if [ ! -d /opt/openclaw-deploy/.git ]; then
               git clone https://github.com/claw-ai-agent-003/openclaw-deploy /opt/openclaw-deploy
             fi
             cd /opt/openclaw-deploy
             git pull origin main
-            
-            # Build and start services
-            docker compose down || true
-            docker compose -f infra/docker-compose.yml up -d --build
-            
+            docker-compose down || true
+            docker-compose -f infra/docker-compose.yml up -d --build
             echo "Deploy complete"
