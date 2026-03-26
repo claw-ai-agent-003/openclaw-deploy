@@ -1,6 +1,7 @@
 name: Deploy
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
 
@@ -11,7 +12,8 @@ env:
 jobs:
   deploy:
     name: Build, Push & Restart Server
-    runs-on: ubuntu-latest
+    runs-on:
+  workflow_dispatch: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
 
