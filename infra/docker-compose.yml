@@ -13,5 +13,18 @@ services:
       timeout: 5s
       retries: 3
 
+  backend:
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      - redis
+
 volumes:
   redis_data:
