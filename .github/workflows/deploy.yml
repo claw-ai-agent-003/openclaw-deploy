@@ -63,7 +63,7 @@ jobs:
             git pull origin main
             
             # Build and start services
-            docker compose -f infra/docker-compose.yml down
+            docker compose down || true
             docker compose -f infra/docker-compose.yml up -d --build
             
             echo "Deploy complete"
