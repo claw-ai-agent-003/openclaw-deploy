@@ -4,16 +4,19 @@ WORKDIR /app
 
 # Build frontend
 COPY frontend/package*.json frontend/
-RUN cd frontend && npm ci && npm run build
+WORKDIR /app/frontend
+RUN npm ci && npm run build
 
 # Build backend
+WORKDIR /app
 COPY backend/package*.json backend/
-RUN cd backend && npm install
+WORKDIR /app/backend
+RUN npm install
 
 COPY backend/tsconfig.json backend/
 COPY backend/src/ backend/src/
 
-RUN cd backend && npm run build
+RUN npm run build
 
 # Production image
 FROM node:20-alpine
