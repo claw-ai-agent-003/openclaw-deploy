@@ -5,7 +5,9 @@ WORKDIR /app
 # Build frontend (monorepo workspace — needs root lockfile)
 COPY package.json package-lock.json ./
 COPY frontend/package*.json frontend/
-RUN npm ci --workspace=frontend && npm run build --workspace=frontend
+RUN npm ci --workspace=frontend
+COPY frontend/ frontend/
+RUN npm run build --workspace=frontend
 
 # Build backend
 WORKDIR /app
