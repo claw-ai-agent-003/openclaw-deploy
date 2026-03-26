@@ -47,12 +47,6 @@ export async function createContainer(
         PortBindings: {
           '18789/tcp': [{ HostPort: undefined }], // dynamic port mapping
         },
-        Healthcheck: {
-          Test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:18789/health'],
-          Interval: 30 * 1000 * 1000 * 1000, // 30 seconds in nanoseconds
-          Timeout: 5 * 1000 * 1000 * 1000, // 5 seconds
-          Retries: 3,
-        },
       },
       ExposedPorts: {
         '18789/tcp': {},
@@ -85,15 +79,15 @@ export async function startContainer(containerId: string): Promise<void> {
     const container = docker.getContainer(containerId);
     await container.start();
 
-    // Wait for container to be healthy
+    // Wait for container to be running
     let attempts = 0;
     while (attempts < 10) {
       const info = await container.inspect();
-      const health = info.state.Health?.Status;
+      const state = info.State?.Status;
 
-      if (health === 'healthy') return;
-      if (health === 'unhealthy') {
-        throw new AppError(500, 'Container health check failed', 'HEALTH_CHECK_FAILED');
+      if (state === 'running') return;
+      if (state === 'exited') {
+        throw new AppError(500, 'Container exited unexpectedly', 'CONTAINER_EXITED');
       }
 
       await new Promise((r) => setTimeout(r, 2000));
@@ -126,7 +120,7 @@ export async function getContainerStatus(containerId: string): Promise<string> {
   try {
     const container = docker.getContainer(containerId);
     const info = await container.inspect();
-    return info.state.Status;
+    return info.State?.Status || 'unknown';
   } catch {
     return 'unknown';
   }
