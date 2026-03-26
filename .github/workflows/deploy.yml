@@ -61,6 +61,6 @@ jobs:
             fi
             cd /opt/openclaw-deploy
             git pull origin main
-            docker-compose -f infra/docker-compose.yml down || true
-            docker-compose -f infra/docker-compose.yml up -d --build
+            docker-compose down || true
+            docker-compose up -d --build
             echo "Deploy complete"
