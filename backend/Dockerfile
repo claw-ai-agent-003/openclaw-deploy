@@ -2,10 +2,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build frontend
+# Build frontend (monorepo workspace — needs root lockfile)
+COPY package.json package-lock.json ./
 COPY frontend/package*.json frontend/
-WORKDIR /app/frontend
-RUN npm ci && npm run build
+RUN npm ci --workspace=frontend && npm run build --workspace=frontend
 
 # Build backend
 WORKDIR /app
