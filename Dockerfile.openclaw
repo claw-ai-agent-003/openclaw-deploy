@@ -1,0 +1,27 @@
+# This Dockerfile is for the custom OpenClaw image.
+# BLOCKING DEPENDENCY — you must build and push this before the platform works.
+#
+# Replace this with your actual OpenClaw Dockerfile.
+# The image should:
+# - Expose port 18789
+# - Accept OPENCLAW_API_KEY and OPENCLAW_PASSWORD env vars
+# - Run a health check at /health
+# - Start OpenClaw in daemon mode on launch
+
+FROM openclaw/base:latest
+
+WORKDIR /app
+
+# Install OpenClaw
+RUN pip install openclaw
+
+# Environment
+ENV PORT=18789
+ENV OPENCLAW_HOST=0.0.0.0
+
+EXPOSE 18789
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD wget -q --spider http://localhost:18789/health || exit 1
+
+CMD ["openclaw", "start", "--daemon", "--host", "0.0.0.0", "--port", "18789"]
