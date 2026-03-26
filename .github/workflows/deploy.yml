@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -52,22 +56,7 @@ jobs:
           script: |
             set -e
             cd /opt/openclaw-deploy
-
-            # Pull latest code
             git pull origin main
-
-            # Pull latest backend image
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-            # Restart backend service
             docker compose -f infra/docker-compose.yml down backend
-            docker compose -f infra/docker-compose.yml up -d redis
-
-            # Rebuild frontend and reload nginx
-            npm ci
-            npm run build --workspace=frontend
-
-            # Reload nginx
-            nginx -t && systemctl reload nginx
-
+            docker compose -f infra/docker-compose.yml up -d --build
             echo "Deploy complete"
