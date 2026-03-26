@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: Test & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ─── Backend ────────────────────────────────────────────────
+
+      - name: Backend type check
+        run: npm run build --workspace=backend
+        env:
+          REDIS_URL: redis://localhost:6379
+          OPENCLAW_AUTH_URL: https://auth.openclaw.com/api/validate
+          DEPLOY_DOMAIN: deploy.openclaw.com
+
+      - name: Backend unit tests
+        run: npm run test --workspace=backend
+        env:
+          REDIS_URL: redis://localhost:6379
+          OPENCLAW_AUTH_URL: https://auth.openclaw.com/api/validate
+          DEPLOY_DOMAIN: deploy.openclaw.com
+
+      # ─── Frontend ──────────────────────────────────────────────
+
+      - name: Frontend type check
+        run: npm run build --workspace=frontend
+
+      - name: Frontend unit tests
+        run: npm run test --workspace=frontend
