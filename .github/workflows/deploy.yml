@@ -61,6 +61,6 @@ jobs:
             fi
             cd /opt/openclaw-deploy
             git pull origin main
-            docker compose down --remove-orphans || true
-            docker compose up -d --build --force-recreate
+            docker-compose down --remove-orphans || true
+            docker-compose up -d --build --force-recreate --remove-orphans
             echo "Deploy complete"
