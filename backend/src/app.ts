@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { deployRouter } from './routes/deploy.js';
 import { errorHandler } from './middleware/error-handler.js';
@@ -16,8 +17,8 @@ app.use(cors());
 app.use(express.json());
 
 // Serve frontend in production
+const distPath = IS_PROD ? path.join(__dirname, '../frontend/dist') : '';
 if (IS_PROD) {
-  const distPath = path.join(__dirname, '../frontend/dist');
   app.use(express.static(distPath));
 }
 
@@ -25,6 +26,19 @@ app.use('/api/deploy', deployRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Debug: placeholder root response
+app.get('/api/debug', (_req, res) => {
+  res.json({
+    node: process.version,
+    env: process.env.NODE_ENV,
+    __dirname,
+    files: {
+      frontendDist: fs.existsSync(distPath),
+      indexHtml: fs.existsSync(path.join(__dirname, '../frontend/dist/index.html')),
+    },
+  });
 });
 
 // SPA fallback — serve index.html for non-API routes
