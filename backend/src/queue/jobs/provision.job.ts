@@ -6,6 +6,7 @@ export interface ProvisionJobData {
   deploymentId: string;
   slug: string;
   apiKey: string;
+  userId?: string;
 }
 
 export async function handleProvision(job: Job<ProvisionJobData>): Promise<void> {

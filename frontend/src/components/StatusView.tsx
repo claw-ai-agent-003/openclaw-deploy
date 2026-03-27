@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getStatus } from '../api/deploy';
 
 interface Props {
@@ -12,15 +12,18 @@ const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export function StatusView({ deploymentId, onSuccess, onError }: Props) {
   const startTime = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
   const passwordRef = useRef<string | null>(null);
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
 
     function poll() {
-      const elapsed = Date.now() - startTime.current;
+      const now = Date.now();
+      const elapsedMs = now - startTime.current;
+      setElapsed(elapsedMs);
 
-      if (elapsed > TIMEOUT_MS) {
+      if (elapsedMs > TIMEOUT_MS) {
         onError("This is taking longer than expected — we'll email you when it's ready");
         return;
       }
@@ -30,40 +33,34 @@ export function StatusView({ deploymentId, onSuccess, onError }: Props) {
           if (status.status === 'RUNNING' && status.url) {
             onSuccess(status.url, passwordRef.current || '');
           } else if (status.status === 'FAILED') {
-            onError(
-              status.error || 'Deployment failed — please try again'
-            );
+            onError(status.error || 'Deployment failed — please try again');
           }
-          // PENDING or PROVISIONING → keep polling
         })
         .catch((err) => {
           const axiosErr = err as { response?: { data?: { error?: string } } };
           onError(
-            axiosErr.response?.data?.error ||
-              'Failed to check deployment status'
+            axiosErr.response?.data?.error || 'Failed to check deployment status'
           );
         });
     }
 
-    // Store password when we get it from a future endpoint (not yet implemented)
-    // For now, the user will see it on the success page
-
     intervalId = setInterval(poll, POLL_INTERVAL);
-    poll(); // immediate first check
+    poll();
 
     return () => clearInterval(intervalId);
   }, [deploymentId, onSuccess, onError]);
 
-  const elapsed = Math.floor((Date.now() - startTime.current) / 1000);
-  const minutes = Math.floor(elapsed / 60);
-  const seconds = elapsed % 60;
+  const seconds = Math.floor(elapsed / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
 
   return (
     <div style={styles.container}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={styles.spinner} />
       <p style={styles.message}>Setting up your deployment...</p>
       <p style={styles.time}>
-        {minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`}
+        {minutes > 0 ? `${minutes}m ${secs}s` : `${secs}s`}
       </p>
       <p style={styles.hint}>
         This usually takes under 2 minutes. You can close this tab — your

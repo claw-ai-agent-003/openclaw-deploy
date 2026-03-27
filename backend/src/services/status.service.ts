@@ -15,6 +15,7 @@ export const DeploymentSchema = z.object({
   error: z.string().optional(),
   retryCount: z.number().default(0),
   email: z.string().optional(),
+  userId: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -48,6 +49,7 @@ class StatusService {
       error: existing?.error,
       retryCount: existing?.retryCount || 0,
       email: existing?.email,
+      userId: existing?.userId,
       createdAt: existing?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...updates,
@@ -56,13 +58,14 @@ class StatusService {
     await redis.set(this.key(id), JSON.stringify(updated));
   }
 
-  async createDeployment(id: string, slug: string, email?: string): Promise<Deployment> {
+  async createDeployment(id: string, slug: string, email?: string, userId?: string): Promise<Deployment> {
     const deployment: Deployment = {
       id,
       slug,
       status: 'PENDING',
       retryCount: 0,
       email,
+      userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -73,6 +76,35 @@ class StatusService {
 
   async deleteDeployment(id: string): Promise<void> {
     await redis.del(this.key(id));
+  }
+
+  async getDeploymentsByUser(userId: string): Promise<Deployment[]> {
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, k] = await redis.scan(cursor, 'MATCH', 'deployment:*', 'COUNT', 100);
+      cursor = nextCursor;
+      keys.push(...k);
+    } while (cursor !== '0');
+
+    const deployments: Deployment[] = [];
+    for (const key of keys) {
+      const data = await redis.get(key);
+      if (data) {
+        try {
+          const d = DeploymentSchema.parse(JSON.parse(data));
+          if (d.userId === userId) {
+            deployments.push(d);
+          }
+        } catch {
+          // ignore malformed
+        }
+      }
+    }
+
+    // Sort by createdAt descending
+    deployments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return deployments;
   }
 }
 

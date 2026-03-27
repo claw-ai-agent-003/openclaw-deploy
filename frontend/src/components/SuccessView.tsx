@@ -47,7 +47,11 @@ export function SuccessView({ url, password, onReset }: Props) {
         <button style={styles.primaryButton}>Open Dashboard</button>
       </a>
 
-      <button onClick={onReset} style={styles.secondaryButton}>
+      <a href="/dashboard">
+        <button style={styles.secondaryButton}>Go to Dashboard</button>
+      </a>
+
+      <button onClick={onReset} style={styles.tertiaryButton}>
         Deploy Another
       </button>
     </div>
@@ -152,6 +156,20 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '12px',
   },
   secondaryButton: {
+    display: 'block',
+    width: '100%',
+    padding: '12px 24px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    backgroundColor: '#f3f4f6',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    marginBottom: '12px',
+  },
+  tertiaryButton: {
     padding: '12px 24px',
     fontSize: '14px',
     fontWeight: '600',

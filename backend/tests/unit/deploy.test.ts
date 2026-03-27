@@ -8,6 +8,7 @@ import * as statusService from '../../src/services/status.service.js';
 import * as provisioning from '../../src/services/provisioning.service.js';
 import * as queue from '../../src/queue/queue.config.js';
 import { AppError } from '../../src/middleware/error-handler.js';
+import cookieParser from 'cookie-parser';
 
 vi.mock('../../src/services/validation.service.js');
 vi.mock('../../src/services/url.service.js');
@@ -24,7 +25,21 @@ const mockedQueue = vi.mocked(queue);
 function createApp() {
   const app = express();
   app.use(express.json());
-  app.use('/api/deploy', deployRouter);
+  app.use(cookieParser());
+
+  // Attach mock user before the deploy router (runs for all routes under /api/deploy)
+  app.use('/api/deploy', (req: any, _res, next) => {
+    req.user = {
+      id: 'test-user-id',
+      githubId: 12345,
+      username: 'testuser',
+      email: 'test@example.com',
+      avatarUrl: 'https://avatars.githubusercontent.com/u/12345',
+    };
+    next();
+  });
+
+  app.use('/api/deploy', deployRouter({ skipAuth: true }));
   app.use((err: any, _req: any, res: any, _next: any) => {
     res.status(err.statusCode || 500).json({ error: err.message });
   });

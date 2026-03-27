@@ -21,3 +21,24 @@ export async function getStatus(id: string): Promise<StatusResponse> {
   const response = await axios.get<StatusResponse>(`${API_BASE}/${id}/status`);
   return response.data;
 }
+
+export interface UserDeployment {
+  id: string;
+  slug: string;
+  status: StatusResponse['status'];
+  url?: string;
+  error?: string;
+  createdAt: string;
+}
+
+export async function getMyDeployments(): Promise<{ deployments: UserDeployment[] }> {
+  const response = await axios.get<{ deployments: UserDeployment[] }>(
+    '/api/users/me/deployments',
+    { withCredentials: true }
+  );
+  return response.data;
+}
+
+export async function deleteDeployment(id: string): Promise<void> {
+  await axios.delete(`/api/users/me/deployments/${id}`, { withCredentials: true });
+}

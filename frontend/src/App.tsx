@@ -1,25 +1,45 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DeployForm } from './components/DeployForm';
 import { StatusView } from './components/StatusView';
 import { SuccessView } from './components/SuccessView';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 type View = 'form' | 'polling' | 'success' | 'error';
 
-export function App() {
+function DeployPage() {
   const [view, setView] = useState<View>('form');
   const [deploymentId, setDeploymentId] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    axios.get('/api/auth/me', { withCredentials: true })
+      .then(() => setIsLoggedIn(true))
+      .catch(() => setIsLoggedIn(false));
+  }, []);
+
+  if (isLoggedIn === null) return null;
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Please <a href="/login" className="text-blue-600 hover:underline">sign in</a> first.</p>
+      </div>
+    );
+  }
 
   function handleDeploy(id: string) {
     setDeploymentId(id);
     setView('polling');
   }
 
-  function handleSuccess(url: string, password: string) {
-    setUrl(url);
-    setPassword(password);
+  function handleSuccess(resultUrl: string, resultPassword: string) {
+    setUrl(resultUrl);
+    setPassword(resultPassword);
     setView('success');
   }
 
@@ -41,6 +61,9 @@ export function App() {
       <header style={styles.header}>
         <h1 style={styles.logo}>OpenClaw</h1>
         <p style={styles.tagline}>One-click cloud deployment</p>
+        <a href="/dashboard" style={{ marginTop: '8px', fontSize: '14px', color: '#6b7280' }}>
+          → Dashboard
+        </a>
       </header>
 
       <main style={styles.main}>
@@ -56,8 +79,12 @@ export function App() {
           />
         )}
 
-        {view === 'success' && url && password && (
+        {view === 'success' && url && password !== null && (
           <SuccessView url={url} password={password} onReset={handleReset} />
+        )}
+
+        {view === 'success' && url && password === null && (
+          <SuccessView url={url} password="" onReset={handleReset} />
         )}
 
         {view === 'error' && (
@@ -135,3 +162,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '14px',
   },
 };
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<DeployPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
