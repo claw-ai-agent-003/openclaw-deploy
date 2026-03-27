@@ -2,32 +2,34 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build frontend (monorepo workspace — needs root lockfile)
+# Copy root workspace files
 COPY package.json package-lock.json ./
+
+# ─── Build frontend ────────────────────────────────────────────────
 COPY frontend/package*.json frontend/
 RUN npm ci --workspace=frontend
 COPY frontend/ frontend/
 RUN npm run build --workspace=frontend
 
-# Build backend
-COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
+# ─── Build backend ─────────────────────────────────────────────────
+COPY backend/package*.json backend/
+RUN npm install --workspace=backend
+COPY backend/tsconfig.json backend/
+COPY backend/src/ backend/src/
+RUN npm run build --workspace=backend
 
-COPY backend/tsconfig.json ./
-COPY backend/src/ ./src/
-
-RUN npm run build
-
-# Production image
+# ─── Production image ─────────────────────────────────────────────
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/frontend/dist ./frontend/dist/
+# Copy backend production deps (hoisted to /app/node_modules)
+COPY --from=builder /app/node_modules ./node_modules/
 COPY --from=builder /app/backend/dist ./dist/
 COPY --from=builder /app/backend/package*.json ./
-COPY --from=builder /app/backend/node_modules ./node_modules/
+
+# Copy frontend static files
+COPY --from=builder /app/frontend/dist ./frontend/dist/
 
 ENV NODE_ENV=production
 ENV PORT=3000
