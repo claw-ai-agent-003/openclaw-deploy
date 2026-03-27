@@ -17,7 +17,7 @@ app.use(express.json());
 
 // Serve frontend in production
 if (IS_PROD) {
-  const distPath = path.join(__dirname, '../../frontend/dist');
+  const distPath = path.join(__dirname, '../frontend/dist');
   app.use(express.static(distPath));
 }
 
@@ -30,7 +30,7 @@ app.get('/health', (_req, res) => {
 // SPA fallback — serve index.html for non-API routes
 if (IS_PROD) {
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
   });
 }
 
