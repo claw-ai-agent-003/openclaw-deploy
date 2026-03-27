@@ -10,13 +10,12 @@ COPY frontend/ frontend/
 RUN npm run build --workspace=frontend
 
 # Build backend
-WORKDIR /app
-COPY backend/package*.json backend/
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-COPY backend/tsconfig.json backend/
-COPY backend/src/ backend/src/
+COPY backend/tsconfig.json ./
+COPY backend/src/ ./src/
 
 RUN npm run build
 
