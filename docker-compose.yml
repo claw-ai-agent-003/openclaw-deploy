@@ -22,8 +22,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # No external port mapping — only backend needs access via internal network
     volumes:
       - redis_data:/data
     healthcheck:
