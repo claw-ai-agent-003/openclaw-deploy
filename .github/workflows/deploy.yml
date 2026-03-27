@@ -62,5 +62,7 @@ jobs:
             cd /opt/openclaw-deploy
             git pull origin main
             docker-compose down --remove-orphans || true
+            # Kill any container still holding port 3000
+            docker ps -q --filter "publish=3000" | xargs -r docker rm -f || true
             docker-compose up -d --build --force-recreate --remove-orphans
             echo "Deploy complete"
