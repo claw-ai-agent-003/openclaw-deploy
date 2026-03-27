@@ -43,8 +43,18 @@ app.get('/api/debug', (_req, res) => {
 
 // SPA fallback — serve index.html for non-API routes
 if (IS_PROD) {
+  // Debug: serve a simple HTML test at /test
+  app.get('/test', (_req, res) => {
+    res.type('html').send('<html><body><h1>IT WORKS</h1><p>If you see this, the server can serve HTML.</p></body></html>');
+  });
+
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(500).send('index.html not found at ' + indexPath);
+    }
   });
 }
 
